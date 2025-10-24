@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Book {
+  id          String     @id @default(cuid())
+  title       String
+  author      String
+  description String
+  price       Float
+  coverImage  String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  purchases   Purchase[]
+}
+
+model Purchase {
+  id            String         @id @default(cuid())
+  bookId        String
+  book          Book           @relation(fields: [bookId], references: [id])
+  email         String
+  orderId       String         @unique
+  paymentId     String?        @unique
+  amount        Float
+  currency      String
+  status        PurchaseStatus @default(PENDING)
+  downloadCount Int            @default(0)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  emails        Email[]
+}
+
+model Email {
+  id         String      @id @default(cuid())
+  purchaseId String
+  purchase   Purchase    @relation(fields: [purchaseId], references: [id])
+  type       EmailType
+  status     EmailStatus @default(PENDING)
+  sentAt     DateTime?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+enum PurchaseStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum EmailType {
+  PURCHASE_CONFIRMATION
+  DOWNLOAD_LINK
+  REFUND_CONFIRMATION
+}
+
+enum EmailStatus {
+  PENDING
+  SENT
+  FAILED
+}
