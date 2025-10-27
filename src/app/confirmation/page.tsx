@@ -26,10 +26,10 @@ export default function ConfirmationPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">
+          <h1 className="text-2xl font-bold mb-4 text-emerald-600">
             Processing your payment...
           </h1>
-          <p>Please wait while we confirm your purchase.</p>
+          <p className="text-gray-600">Please wait while we confirm your purchase.</p>
         </div>
       </div>
     );
@@ -42,7 +42,7 @@ export default function ConfirmationPage() {
           <h1 className="text-2xl font-bold mb-4 text-red-600">
             Payment Error
           </h1>
-          <p>There was an issue processing your payment. Please try again.</p>
+          <p className="text-gray-600">There was an issue processing your payment. Please try again.</p>
         </div>
       </div>
     );
@@ -51,10 +51,10 @@ export default function ConfirmationPage() {
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
-        <h1 className="text-2xl font-bold mb-4 text-green-600">
+        <h1 className="text-2xl font-bold mb-4 text-emerald-600">
           Payment Successful!
         </h1>
-        <p>
+        <p className="text-gray-600">
           Thank you for your purchase. You will receive an email with your
           audiobook shortly.
         </p>

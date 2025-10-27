@@ -66,10 +66,10 @@ export default function DownloadPage({ params }: DownloadPageProps) {
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
         <div className="text-center space-y-6">
           <div className="relative">
-            <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-xl animate-pulse"></div>
-            <div className="relative animate-spin rounded-full h-16 w-16 border-2 border-emerald-500/50 border-t-emerald-400"></div>
+            <div className="absolute inset-0 bg-emerald-200 rounded-full blur-xl animate-pulse"></div>
+            <div className="relative animate-spin rounded-full h-16 w-16 border-2 border-emerald-300 border-t-emerald-600"></div>
           </div>
-          <p className="text-zinc-400 font-light">Loading book details...</p>
+          <p className="text-gray-600 font-light">Loading book details...</p>
         </div>
       </div>
     );
@@ -80,18 +80,18 @@ export default function DownloadPage({ params }: DownloadPageProps) {
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
         <div className="max-w-md w-full mx-auto p-8 text-center space-y-8">
           <div className="relative">
-            <div className="absolute inset-0 bg-red-500/20 rounded-full blur-xl"></div>
+            <div className="absolute inset-0 bg-red-200 rounded-full blur-xl"></div>
             <div className="relative">
-              <AlertCircle className="w-16 h-16 text-red-400" />
+              <AlertCircle className="w-16 h-16 text-red-600" />
             </div>
           </div>
           <div className="space-y-4">
-            <h1 className="text-3xl font-light text-red-400">Error</h1>
-            <p className="text-zinc-400 font-light">{error}</p>
+            <h1 className="text-3xl font-light text-red-600">Error</h1>
+            <p className="text-gray-600 font-light">{error}</p>
           </div>
           <Button
             asChild
-            className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-6 py-2.5 rounded-full transition-all duration-300 font-light border border-emerald-500/20 hover:border-emerald-500/40 hover:scale-105 hover:shadow-lg hover:shadow-emerald-500/10"
+            className="bg-emerald-100 hover:bg-emerald-200 text-emerald-700 px-6 py-2.5 rounded-full transition-all duration-300 font-light border border-emerald-300 hover:border-emerald-400 hover:scale-105 hover:shadow-lg hover:shadow-emerald-500/20"
           >
             <Link href="/">Return Home</Link>
           </Button>
@@ -104,26 +104,26 @@ export default function DownloadPage({ params }: DownloadPageProps) {
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
       <div className="max-w-md w-full mx-auto p-8 text-center space-y-8">
         <div className="relative">
-          <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-xl"></div>
+          <div className="absolute inset-0 bg-emerald-200 rounded-full blur-xl"></div>
           <div className="relative flex items-center justify-center">
             {downloadStarted ? (
-              <CheckCircle2 className="w-16 h-16 text-emerald-400" />
+              <CheckCircle2 className="w-16 h-16 text-emerald-600" />
             ) : (
-              <Download className="w-16 h-16 text-emerald-400" />
+              <Download className="w-16 h-16 text-emerald-600" />
             )}
           </div>
         </div>
         <div className="space-y-4">
-          <h1 className="text-3xl font-light text-emerald-400">
+          <h1 className="text-3xl font-light text-emerald-600">
             {downloadStarted ? "Download Starting!" : "Ready to Download"}
           </h1>
-          <div className="bg-black/40 backdrop-blur-xl p-6 rounded-xl border border-emerald-500/20 space-y-3">
-            <h2 className="text-xl font-light text-emerald-400">
+          <div className="bg-white/80 backdrop-blur-xl p-6 rounded-xl border border-emerald-200 shadow-sm space-y-3">
+            <h2 className="text-xl font-light text-emerald-700">
               {bookDetails?.title}
             </h2>
-            <p className="text-zinc-400 font-light">{bookDetails?.author}</p>
+            <p className="text-gray-600 font-light">{bookDetails?.author}</p>
           </div>
-          <p className="text-zinc-400 font-light">
+          <p className="text-gray-600 font-light">
             {downloadStarted
               ? "Your download will begin automatically. If it doesn't, click the button below."
               : "Click the button below to start your download."}
@@ -132,14 +132,14 @@ export default function DownloadPage({ params }: DownloadPageProps) {
             <Button
               onClick={handleDownload}
               disabled={downloadStarted}
-              className="w-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-6 py-2.5 rounded-full transition-all duration-300 font-light border border-emerald-500/20 hover:border-emerald-500/40 hover:scale-105 hover:shadow-lg hover:shadow-emerald-500/10 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:shadow-none"
+              className="w-full bg-emerald-100 hover:bg-emerald-200 text-emerald-700 px-6 py-2.5 rounded-full transition-all duration-300 font-light border border-emerald-300 hover:border-emerald-400 hover:scale-105 hover:shadow-lg hover:shadow-emerald-500/20 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:shadow-none"
             >
               {downloadStarted ? "Downloading..." : "Download Now"}
             </Button>
             <Button
               asChild
               variant="outline"
-              className="w-full border-emerald-500/20 text-zinc-400 hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/5 rounded-full transition-all duration-300 font-light"
+              className="w-full border-emerald-300 text-gray-600 hover:text-emerald-600 hover:border-emerald-400 hover:bg-emerald-50 rounded-full transition-all duration-300 font-light"
             >
               <Link href="/purchases">View All Purchases</Link>
             </Button>

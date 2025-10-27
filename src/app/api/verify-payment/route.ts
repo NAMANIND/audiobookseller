@@ -4,6 +4,7 @@ import crypto from "crypto";
 import { generateDownloadToken } from "@/lib/auth";
 import { sendDownloadLink } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
+import { addUserAccessToFile, extractFileIdFromDriveUrl } from "@/lib/drive";
 
 const RAZORPAY_SECRET = process.env.RAZORPAY_SECRET_KEY || "";
 
@@ -51,6 +52,24 @@ export async function POST(request: Request) {
       },
     });
 
+    // Grant Google Drive access to the user
+    try {
+      if (purchase.book.driveLink) {
+        const fileId = extractFileIdFromDriveUrl(purchase.book.driveLink);
+        if (fileId) {
+          await addUserAccessToFile(fileId, email);
+          console.log(`✓ Granted Drive access to ${email} for ${purchase.book.title}`);
+        } else {
+          console.error(`Failed to extract fileId from driveLink: ${purchase.book.driveLink}`);
+        }
+      } else {
+        console.log(`No driveLink found for book: ${purchase.book.title}`);
+      }
+    } catch (driveError) {
+      console.error("Failed to grant Drive access:", driveError);
+      // Don't fail the entire purchase if Drive access fails
+    }
+
     // Generate download token
     const token = generateDownloadToken(email, purchase.id);
 
@@ -68,7 +87,7 @@ export async function POST(request: Request) {
 
     // Send download link via email
     try {
-      await sendDownloadLink(email, downloadUrl, bookTitle);
+      await sendDownloadLink(email, downloadUrl, bookTitle, purchase.book.driveLink);
 
       // Update email status
       await prisma.email.update({

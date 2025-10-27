@@ -16,6 +16,9 @@ export async function GET(
         title: true,
         author: true,
         description: true,
+        price: true,
+        coverImage: true,
+        driveLink: true,
       },
     });
 
