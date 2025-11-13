@@ -62,3 +62,6 @@ ALTER TABLE "Purchase" ADD CONSTRAINT "Purchase_bookId_fkey" FOREIGN KEY ("bookI
 
 -- AddForeignKey
 ALTER TABLE "Email" ADD CONSTRAINT "Email_purchaseId_fkey" FOREIGN KEY ("purchaseId") REFERENCES "Purchase"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddColumn
+ALTER TABLE "Book" ADD COLUMN "driveLink" TEXT NOT NULL DEFAULT '';
