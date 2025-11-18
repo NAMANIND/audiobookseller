@@ -1,4 +1,4 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 
@@ -24,13 +24,13 @@ interface PublishArticlesEvent {
 
 type WebhookPayload = PublishArticlesEvent;
 
-function validateAccessToken(req: NextApiRequest): boolean {
-  const authHeader = req.headers.authorization;
+function validateAccessToken(request: NextRequest): boolean {
+  const authHeader = request.headers.get("authorization");
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return false;
   }
   const token = authHeader.split(" ")[1];
-  const expectedToken = process.env.WEBHOOK_ACCESS_TOKEN || "test";
+  const expectedToken = process.env.WEBHOOK_ACCESS_TOKEN;
 
   if (!expectedToken) {
     console.error("WEBHOOK_ACCESS_TOKEN is not configured");
@@ -142,30 +142,54 @@ async function processPublishArticlesEvent(
   await saveArticles(payload.data.articles);
 }
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
+export async function GET(request: NextRequest) {
+  return NextResponse.json(
+    { message: "Webhook endpoint is active. Use POST to send articles." },
+    { status: 200 }
+  );
+}
 
-  if (!validateAccessToken(req)) {
-    return res.status(401).json({ error: "Invalid access token" });
+export async function POST(request: NextRequest) {
+  if (!validateAccessToken(request)) {
+    return NextResponse.json(
+      { error: "Invalid access token" },
+      { status: 401 }
+    );
   }
 
   try {
-    const payload = req.body;
+    const payload = await request.json();
 
     if (!validatePayload(payload)) {
-      return res.status(400).json({ error: "Invalid webhook payload" });
+      return NextResponse.json(
+        { error: "Invalid webhook payload" },
+        { status: 400 }
+      );
     }
 
     await processPublishArticlesEvent(payload);
 
-    return res.status(200).json({ message: "Webhook processed successfully" });
+    return NextResponse.json(
+      { message: "Webhook processed successfully" },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Webhook processing error:", error);
-    return res.status(500).json({ error: "Internal server error" });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
+}
+
+export async function PUT(request: NextRequest) {
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
+}
+
+export async function DELETE(request: NextRequest) {
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
+}
+
+export async function PATCH(request: NextRequest) {
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }
