@@ -142,13 +142,6 @@ async function processPublishArticlesEvent(
   await saveArticles(payload.data.articles);
 }
 
-export async function GET(request: NextRequest) {
-  return NextResponse.json(
-    { message: "Webhook endpoint is active. Use POST to send articles." },
-    { status: 200 }
-  );
-}
-
 export async function POST(request: NextRequest) {
   if (!validateAccessToken(request)) {
     return NextResponse.json(
@@ -180,16 +173,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-export async function PUT(request: NextRequest) {
-  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
-}
-
-export async function DELETE(request: NextRequest) {
-  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
-}
-
-export async function PATCH(request: NextRequest) {
-  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }
