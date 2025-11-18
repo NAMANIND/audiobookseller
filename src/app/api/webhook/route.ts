@@ -135,6 +135,8 @@ async function processPublishArticlesEvent(
     `Processing publish_articles event with ${payload.data.articles.length} article(s)`
   );
 
+  console.log("payload.data.articles", payload.data.articles);
+
   for (const article of payload.data.articles) {
     console.log(`Processing article: ${article.id} - ${article.title}`);
   }
