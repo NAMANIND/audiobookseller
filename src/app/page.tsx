@@ -20,7 +20,6 @@ interface Book {
   description: string;
   price: number;
   coverImage: string;
-  driveLink: string;
 }
 
 export default function Home() {
@@ -116,51 +115,51 @@ export default function Home() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
             {audiobooks.map((book) => (
-            <Card
-              key={book.id}
-              className="p-0 group relative hover:shadow-2xl transition-all duration-500 bg-white/80 backdrop-blur-xl border-emerald-200 hover:border-emerald-300 overflow-hidden rounded-xl"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-              <div className="aspect-[1/1] relative overflow-hidden">
-                <img
-                  src={book.coverImage}
-                  alt={book.title}
-                  className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-              </div>
-              <CardHeader className="space-y-3 px-6 pt-6">
-                <div className="space-y-1">
-                  <CardTitle className="text-xl font-medium text-emerald-600 group-hover:text-emerald-700 transition-colors duration-300">
-                    {book.title}
-                  </CardTitle>
-                  <CardDescription className="text-sm text-gray-600 font-light">
-                    {book.author}
-                  </CardDescription>
+              <Card
+                key={book.id}
+                className="p-0 group relative hover:shadow-2xl transition-all duration-500 bg-emerald-50/80 backdrop-blur-xl border-emerald-200 hover:border-emerald-300 overflow-hidden rounded-xl"
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                <div className="aspect-[1/1] relative overflow-hidden">
+                  <img
+                    src={book.coverImage}
+                    alt={book.title}
+                    className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700"
+                  />
+                  <div className="absolute inset-0 pointer-events-none" />
                 </div>
-              </CardHeader>
-              <CardContent className="px-6">
-                <p className="text-sm text-gray-600 line-clamp-2 font-light leading-relaxed">
-                  {book.description}
-                </p>
-              </CardContent>
-              <CardFooter className="flex justify-between items-center px-6 py-6 border-t border-emerald-200">
-                <div className="space-y-1">
-                  <span className="text-xs text-gray-500 font-light">
-                    Price
-                  </span>
-                  <span className="text-xl font-medium text-emerald-600 block">
-                    ₹{book.price}
-                  </span>
-                </div>
-                <Button
-                  onClick={() => handleBuyNow(book)}
-                  className="relative z-10 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 px-6 py-2.5 rounded-full transition-all duration-300 font-light border border-emerald-300 hover:border-emerald-400 hover:scale-105 hover:shadow-lg hover:shadow-emerald-500/20 cursor-pointer"
-                >
-                  Buy Now
-                </Button>
-              </CardFooter>
-            </Card>
+                <CardHeader className="space-y-3 px-6 pt-6">
+                  <div className="space-y-1">
+                    <CardTitle className="text-xl font-medium text-emerald-600 group-hover:text-emerald-700 transition-colors duration-300">
+                      {book.title}
+                    </CardTitle>
+                    <CardDescription className="text-sm text-gray-600 font-light">
+                      {book.author}
+                    </CardDescription>
+                  </div>
+                </CardHeader>
+                <CardContent className="px-6">
+                  <p className="text-sm text-gray-600 line-clamp-2 font-light leading-relaxed">
+                    {book.description}
+                  </p>
+                </CardContent>
+                <CardFooter className="flex justify-between items-center px-6 py-6 border-t border-emerald-200">
+                  <div className="space-y-1">
+                    <span className="text-xs text-gray-500 font-light">
+                      Price
+                    </span>
+                    <span className="text-xl font-medium text-emerald-600 block">
+                      ₹{book.price}
+                    </span>
+                  </div>
+                  <Button
+                    onClick={() => handleBuyNow(book)}
+                    className="relative z-10 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 px-6 py-2.5 rounded-full transition-all duration-300 font-light border border-emerald-300 hover:border-emerald-400 hover:scale-105 hover:shadow-lg hover:shadow-emerald-500/20 cursor-pointer"
+                  >
+                    Buy Now
+                  </Button>
+                </CardFooter>
+              </Card>
             ))}
           </div>
         )}

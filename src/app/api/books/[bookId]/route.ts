@@ -1,37 +1,22 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { getBookById } from "@/lib/db";
 
 export async function GET(
-  request: Request,
-  params: Promise<{ params: { bookId: string } }>
+  _request: Request,
+  { params }: { params: Promise<{ bookId: string }> }
 ) {
   try {
-    const {
-      params: { bookId },
-    } = await params;
-    const book = await prisma.book.findUnique({
-      where: { id: bookId },
-      select: {
-        id: true,
-        title: true,
-        author: true,
-        description: true,
-        price: true,
-        coverImage: true,
-        driveLink: true,
-      },
-    });
+    const { bookId } = await params;
+    const book = await getBookById(bookId);
 
     if (!book) {
       return NextResponse.json({ error: "Book not found" }, { status: 404 });
     }
 
-    return NextResponse.json(book);
+    const { storagePath: _, fallbackUrl: __, ...publicBook } = book;
+    return NextResponse.json(publicBook);
   } catch (error) {
     console.error("Error fetching book:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch book details" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to fetch book details" }, { status: 500 });
   }
 }

@@ -1,73 +1,47 @@
 import { NextResponse } from "next/server";
 import { verifyToken } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { getPurchaseByIdAndEmail, incrementDownloadCount } from "@/lib/db";
+import { getDownloadUrl } from "@/lib/storage";
 
 export async function GET(
   request: Request,
-  { params }: { params: { bookId: string } }
+  { params }: { params: Promise<{ bookId: string }> }
 ) {
   try {
-    const { searchParams } = new URL(request.url);
-    const token = searchParams.get("token");
+    const { bookId } = await params;
+    const token = new URL(request.url).searchParams.get("token");
 
     if (!token) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
     const decoded = await verifyToken(token);
-    if (!decoded || !decoded.email || !decoded.purchaseId) {
+    if (!decoded?.email || !decoded.purchaseId) {
       return new NextResponse("Invalid token", { status: 401 });
     }
 
-    // Get purchase details from database
-    console.log("Decoded token:", decoded.purchaseId);
-    const purchase = await prisma.purchase.findFirst({
-      where: {
-        id: decoded.purchaseId,
-        email: decoded.email,
-        status: "COMPLETED",
-      },
-      include: {
-        book: true,
-      },
-    });
-
-    if (!purchase) {
+    const purchase = await getPurchaseByIdAndEmail(decoded.purchaseId, decoded.email);
+    if (!purchase || purchase.bookId !== bookId) {
       return new NextResponse("Purchase not found", { status: 404 });
     }
 
-    // Check download count
-    if (purchase.downloadCount >= 1) {
-      return new NextResponse("Download limit exceeded", { status: 404 });
+    const maxDownloads = Number(process.env.MAX_DOWNLOADS ?? 2);
+    if (purchase.downloadCount >= maxDownloads) {
+      return new NextResponse("Download limit exceeded", { status: 403 });
     }
 
-    // Increment download count
-    await prisma.purchase.update({
-      where: { id: purchase.id },
-      data: {
-        downloadCount: {
-          increment: 1,
-        },
-      },
-    });
+    await incrementDownloadCount(purchase.id);
 
-    // Fetch the image from Unsplash
-    const imageUrl =
-      "https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=1000";
-    const imageResponse = await fetch(imageUrl);
-    const imageBlob = await imageResponse.blob();
-
-    const headers = new Headers();
-    headers.set("Content-Disposition", `attachment; filename="book-image.jpg"`);
-    headers.set(
-      "Content-Type",
-      imageResponse.headers.get("Content-Type") || "image/jpeg"
+    const signedUrl = await getDownloadUrl(
+      purchase.book.storagePath,
+      purchase.book.fallbackUrl
     );
 
-    return new NextResponse(imageBlob, {
-      headers,
-    });
+    return NextResponse.redirect(signedUrl);
   } catch (error) {
+    if (error instanceof Error && error.message === "DOWNLOAD_LIMIT_EXCEEDED") {
+      return new NextResponse("Download limit exceeded", { status: 403 });
+    }
     console.error("Download error:", error);
     return new NextResponse("Internal server error", { status: 500 });
   }

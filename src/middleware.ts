@@ -3,8 +3,15 @@ import type { NextRequest } from "next/server";
 import { verifyToken } from "./lib/auth";
 
 export async function middleware(request: NextRequest) {
-  // Public paths that don't require authentication
-  const publicPaths = ["/", "/api/purchase", "/api/verify"];
+  const publicPaths = [
+    "/",
+    "/api/auth/send-otp",
+    "/api/auth/verify-otp",
+    "/api/orders",
+    "/api/verify-payment",
+    "/api/books",
+    "/api/purchases/send",
+  ];
 
   // Check if the current path is public
   const isPublicPath = publicPaths.some((path) =>

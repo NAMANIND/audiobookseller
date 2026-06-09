@@ -1,37 +1,29 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { z } from "zod";
-import { prisma } from "@/lib/prisma";
-import { addUserAccessToFile, extractFileIdFromDriveUrl } from "@/lib/drive";
+import { verifyToken, generateDownloadToken } from "@/lib/auth";
+import { getCompletedPurchasesByEmail } from "@/lib/db";
+import { sendPurchasesEmail } from "@/lib/email";
 
-const emailSchema = z.object({
-  email: z.string().email(),
-});
+const schema = z.object({ email: z.string().email() });
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { email } = emailSchema.parse(body);
+    const { email } = schema.parse(await request.json());
+    const normalizedEmail = email.toLowerCase();
 
-    // Fetch all completed purchases for this email
-    const purchases = await prisma.purchase.findMany({
-      where: {
-        email,
-        status: "COMPLETED",
-      },
-      include: {
-        book: {
-          select: {
-            id: true,
-            title: true,
-            author: true,
-            driveLink: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+    const cookieStore = await cookies();
+    const authToken = cookieStore.get("auth_token")?.value;
+    const session = authToken ? await verifyToken(authToken) : null;
+
+    if (!session?.email || session.email !== normalizedEmail) {
+      return NextResponse.json(
+        { error: "Email not verified. Complete OTP verification first." },
+        { status: 401 }
+      );
+    }
+
+    const purchases = await getCompletedPurchasesByEmail(normalizedEmail);
 
     if (purchases.length === 0) {
       return NextResponse.json(
@@ -40,38 +32,18 @@ export async function POST(request: Request) {
       );
     }
 
-    // Grant access to all purchased audiobooks
-    const audiobooksWithAccess = [];
-    
-    for (const purchase of purchases) {
-      try {
-        if (purchase.book.driveLink) {
-          const fileId = extractFileIdFromDriveUrl(purchase.book.driveLink);
-          if (fileId) {
-            // Grant access (will not fail if already has access)
-            await addUserAccessToFile(fileId, email);
-            
-            audiobooksWithAccess.push({
-              title: purchase.book.title,
-              author: purchase.book.author,
-              driveLink: purchase.book.driveLink,
-            });
-          }
-        }
-      } catch (error) {
-        console.error(`Failed to grant access for book ${purchase.book.title}:`, error);
-        // Continue with other books even if one fails
-      }
-    }
+    const audiobooks = purchases.map(({ purchase, book }) => ({
+      title: book.title,
+      author: book.author,
+      downloadUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/api/download/${book.id}?token=${generateDownloadToken(normalizedEmail, purchase.id)}`,
+    }));
 
-    // Send email with all purchased audiobooks
-    const { sendPurchasesEmail } = await import("@/lib/email");
-    await sendPurchasesEmail(email, audiobooksWithAccess);
+    await sendPurchasesEmail(normalizedEmail, audiobooks);
 
-    return NextResponse.json({ 
-      success: true, 
-      count: audiobooksWithAccess.length,
-      message: `Sent ${audiobooksWithAccess.length} audiobook(s) to your email`
+    return NextResponse.json({
+      success: true,
+      count: audiobooks.length,
+      message: `Sent ${audiobooks.length} audiobook(s) to your email`,
     });
   } catch (error) {
     console.error("Error sending purchases:", error);
@@ -84,4 +56,3 @@ export async function POST(request: Request) {
     );
   }
 }
-
