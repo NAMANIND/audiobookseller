@@ -6,7 +6,7 @@ export const sendOtpEmail = async (email: string, otp: string) => {
   const expiry = process.env.OTP_EXPIRY_MINUTES ?? "10";
 
   const { error } = await resend.emails.send({
-    from: "Audiobook Seller <onboarding@resend.dev>",
+    from: "Audiobook Seller <audiobook@bhawnajaiswal.com>",
     to: email,
     subject: "Your verification code",
     html: `
@@ -29,7 +29,7 @@ export const sendDownloadLink = async (
   const maxDownloads = process.env.MAX_DOWNLOADS ?? "2";
 
   const { error } = await resend.emails.send({
-    from: "Audiobook Seller <onboarding@resend.dev>",
+    from: "Audiobook Seller <audiobook@bhawnajaiswal.com>",
     to: email,
     subject: `Your Audiobook: ${bookTitle}`,
     html: `
@@ -71,7 +71,7 @@ export const sendPurchasesEmail = async (
     .join("");
 
   const { error } = await resend.emails.send({
-    from: "Audiobook Seller <onboarding@resend.dev>",
+    from: "Audiobook Seller <audiobook@bhawnajaiswal.com>",
     to: email,
     subject: `Your Audiobook Library (${audiobooks.length})`,
     html: `
