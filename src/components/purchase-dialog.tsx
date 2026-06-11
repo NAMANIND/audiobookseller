@@ -36,9 +36,12 @@ declare global {
 type DialogState = "purchase" | "loading" | "success" | "error" | "processing";
 type PurchaseStep = "auth" | "otp";
 
+const OTP_RESEND_COOLDOWN_SEC = 30;
+
 export function PurchaseDialog({ isOpen, onClose, book }: PurchaseDialogProps) {
   const router = useRouter();
   const paymentHandledRef = useRef(false);
+  const razorpayRef = useRef<InstanceType<typeof window.Razorpay> | null>(null);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [otp, setOtp] = useState("");
@@ -48,6 +51,25 @@ export function PurchaseDialog({ isOpen, onClose, book }: PurchaseDialogProps) {
   const [dialogState, setDialogState] = useState<DialogState>("purchase");
   const [processingStep, setProcessingStep] = useState("Verifying payment...");
   const [isRazorpayActive, setIsRazorpayActive] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+
+    const timer = window.setInterval(() => {
+      setResendCooldown((prev) => (prev <= 1 ? 0 : prev - 1));
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [resendCooldown]);
+
+  useEffect(() => {
+    if (!isRazorpayActive || !razorpayRef.current) return;
+
+    const razorpay = razorpayRef.current;
+    razorpayRef.current = null;
+    razorpay.open();
+  }, [isRazorpayActive]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -73,6 +95,7 @@ export function PurchaseDialog({ isOpen, onClose, book }: PurchaseDialogProps) {
     setIsRazorpayActive(false);
     setOtp("");
     setPurchaseStep("auth");
+    setResendCooldown(0);
     if (!session) {
       setEmail("");
       setName("");
@@ -92,6 +115,7 @@ export function PurchaseDialog({ isOpen, onClose, book }: PurchaseDialogProps) {
     }
 
     setPurchaseStep("otp");
+    setResendCooldown(OTP_RESEND_COOLDOWN_SEC);
     toast.success("Check your email for the verification code");
   };
 
@@ -217,11 +241,10 @@ export function PurchaseDialog({ isOpen, onClose, book }: PurchaseDialogProps) {
       },
     };
 
-    const razorpay = new window.Razorpay(options);
-    setIsRazorpayActive(true);
+    razorpayRef.current = new window.Razorpay(options);
     setDialogState("processing");
     setProcessingStep("Complete payment in Razorpay...");
-    razorpay.open();
+    setIsRazorpayActive(true);
   };
 
   const handlePurchase = async () => {
@@ -286,6 +309,8 @@ export function PurchaseDialog({ isOpen, onClose, book }: PurchaseDialogProps) {
   };
 
   const handleResendOtp = async () => {
+    if (resendCooldown > 0) return;
+
     setIsLoading(true);
     try {
       await sendOtp();
@@ -437,15 +462,17 @@ export function PurchaseDialog({ isOpen, onClose, book }: PurchaseDialogProps) {
                     placeholder="Enter 6-digit code"
                     value={otp}
                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                    className="text-center text-lg tracking-widest"
+                    className="text-center text-lg tracking-widest placeholder:text-gray-400"
                   />
                   <button
                     type="button"
                     onClick={handleResendOtp}
-                    disabled={isLoading}
-                    className="text-sm text-emerald-600 hover:text-emerald-700 disabled:opacity-50"
+                    disabled={isLoading || resendCooldown > 0}
+                    className="text-sm text-emerald-600 hover:text-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Resend code
+                    {resendCooldown > 0
+                      ? `Resend code in ${resendCooldown}s`
+                      : "Resend code"}
                   </button>
                 </>
               )}
@@ -458,7 +485,7 @@ export function PurchaseDialog({ isOpen, onClose, book }: PurchaseDialogProps) {
               </div>
             </div>
 
-            <DialogFooter className="gap-2 flex flex-col sm:flex-row sm:gap-0">
+            <DialogFooter className="gap-2 flex flex-col">
               {!isAuthenticated && purchaseStep === "otp" && (
                 <Button
                   variant="outline"
@@ -472,7 +499,7 @@ export function PurchaseDialog({ isOpen, onClose, book }: PurchaseDialogProps) {
                 </Button>
               )}
               <Button
-                className="w-full rounded-full bg-emerald-600 text-white hover:bg-emerald-700"
+                className=" rounded-full bg-emerald-600 text-white hover:bg-emerald-700"
                 onClick={handlePurchase}
                 disabled={isLoading || !book.id}
               >
@@ -492,7 +519,8 @@ export function PurchaseDialog({ isOpen, onClose, book }: PurchaseDialogProps) {
 
   return (
     <Dialog
-      open={isOpen}
+      open={isOpen && !isRazorpayActive}
+      modal={!isRazorpayActive}
       onOpenChange={
         dialogState === "processing" || isRazorpayActive
           ? undefined
