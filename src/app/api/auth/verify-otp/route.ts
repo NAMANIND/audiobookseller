@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { verifyOtp } from "@/lib/otp";
-import { generateSessionToken } from "@/lib/auth";
+import { setAuthCookie } from "@/lib/auth";
+import { upsertUserFromLogin, userToSession } from "@/lib/users";
 
 const schema = z.object({
     email: z.string().email(),
@@ -17,15 +18,14 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Invalid or expired OTP" }, { status: 401 });
         }
 
-        const token = generateSessionToken(email);
-        const response = NextResponse.json({ success: true });
-
-        response.cookies.set("auth_token", token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "lax",
-            maxAge: 24 * 60 * 60,
+        const user = await upsertUserFromLogin({
+            email,
+            provider: "email",
         });
+
+        const session = userToSession(user, "email");
+        const response = NextResponse.json({ success: true, user: session });
+        setAuthCookie(response, session);
 
         return response;
     } catch (error) {

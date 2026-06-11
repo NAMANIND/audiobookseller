@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import Razorpay from "razorpay";
 import { getBookById, createPurchase, createEmailRecord } from "@/lib/db";
+import { normalizeEmail } from "@/lib/users";
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID || "",
@@ -27,12 +28,12 @@ export async function POST(request: Request) {
       amount: Math.round(price * 100),
       currency: "INR",
       receipt: `ord_${bookId.slice(0, 8)}_${Date.now().toString().slice(-6)}`,
-      notes: { bookId, email },
+      notes: { bookId, email: normalizeEmail(email) },
     });
 
     const purchase = await createPurchase({
       bookId,
-      email: email.toLowerCase(),
+      email: normalizeEmail(email),
       orderId: order.id,
       amount: price,
       currency: "INR",

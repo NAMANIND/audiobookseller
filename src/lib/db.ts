@@ -1,4 +1,5 @@
 import { db } from "@/lib/firebase-admin";
+import { normalizeEmail } from "@/lib/users";
 import type { Book, Purchase, EmailRecord, PurchaseStatus } from "@/lib/types";
 
 const booksCol = () => db.collection("books");
@@ -28,6 +29,7 @@ export async function createPurchase(data: {
     const ref = purchasesCol().doc();
     const purchase: Omit<Purchase, "id"> = {
         ...data,
+        email: normalizeEmail(data.email),
         status: data.status ?? "PENDING",
         downloadCount: 0,
         createdAt: now,
@@ -63,7 +65,7 @@ export async function getPurchaseByIdAndEmail(
     if (!doc.exists) return null;
 
     const purchase = { id: doc.id, ...doc.data() } as Purchase;
-    if (purchase.email !== email || purchase.status !== "COMPLETED") return null;
+    if (purchase.email !== normalizeEmail(email) || purchase.status !== "COMPLETED") return null;
 
     const book = await getBookById(purchase.bookId);
     if (!book) return null;
@@ -78,12 +80,6 @@ export async function incrementDownloadCount(purchaseId: string): Promise<number
         if (!doc.exists) throw new Error("Purchase not found");
 
         const current = doc.data()?.downloadCount ?? 0;
-        const max = Number(process.env.MAX_DOWNLOADS ?? 2);
-
-        if (current >= max) {
-            throw new Error("DOWNLOAD_LIMIT_EXCEEDED");
-        }
-
         const next = current + 1;
         tx.update(ref, { downloadCount: next, updatedAt: new Date().toISOString() });
         return next;
@@ -93,8 +89,9 @@ export async function incrementDownloadCount(purchaseId: string): Promise<number
 }
 
 export async function getCompletedPurchasesByEmail(email: string) {
+    const normalized = normalizeEmail(email);
     const snap = await purchasesCol()
-        .where("email", "==", email.toLowerCase())
+        .where("email", "==", normalized)
         .where("status", "==", "COMPLETED")
         .orderBy("createdAt", "desc")
         .get();

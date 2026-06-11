@@ -1,14 +1,11 @@
 import crypto from "crypto";
 import { db } from "@/lib/firebase-admin";
+import { normalizeEmail } from "@/lib/users";
 
 const OTP_EXPIRY_MINUTES = Number(process.env.OTP_EXPIRY_MINUTES ?? 10);
 const OTP_MAX_ATTEMPTS = Number(process.env.OTP_MAX_ATTEMPTS ?? 5);
 const RATE_WINDOW_MIN = Number(process.env.OTP_RATE_LIMIT_WINDOW_MINUTES ?? 15);
 const RATE_MAX = Number(process.env.OTP_RATE_LIMIT_MAX_REQUESTS ?? 3);
-
-function normalizeEmail(email: string) {
-    return email.trim().toLowerCase();
-}
 
 function otpDocId(email: string) {
     return crypto.createHash("sha256").update(normalizeEmail(email)).digest("hex");
